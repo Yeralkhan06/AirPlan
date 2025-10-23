@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AviaTickets — Найди дешевые билеты</title>
+  <style>
+    /* === Базовые настройки (используем rem вместо px) === */
+    html { font-size: 16px; /* 1rem = 16px */ }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; line-height:1.4; color:#111; margin:0; background:#f7fbff; }
+
+    /* Удобные переменные (в rem) */
+    :root{
+      --gap: 1.25rem; /* 20px */
+      --container-max: 75rem; /* 1200px */
+      --accent: #ff9800;
+      --brand: #0077ff;
+      --card-radius: 0.75rem; /* 12px */
+    }
+
+    .container{ max-width:var(--container-max); width:90%; margin:0 auto; }
+
+    header{ background:linear-gradient(90deg,#0366d6 0%, #0480ff 100%); color:#fff; padding:1rem 0; }
+    header .inner{ display:flex; align-items:center; justify-content:space-between; gap:var(--gap); }
+    .logo{ font-weight:700; font-size:1.125rem; }
+
+    /* === Hero === */
+    .hero{ min-height:60vh; display:flex; align-items:center; color:#fff; background-image: url('https://images.unsplash.com/photo-1529074963764-98f45c47344b?auto=format&fit=crop&w=1600&q=60'); background-position:center; background-size:cover; padding:3rem 0; position:relative; }
+    .hero::after{ content:''; position:absolute; inset:0; background: linear-gradient(180deg, rgba(4,4,10,0.2) 0%, rgba(2,6,23,0.6) 60%); }
+    .hero .hero-inner{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; text-align:center; gap:1rem; }
+    .hero h1{ font-size:2.25rem; margin:0; line-height:1.05; }
+    .hero p.lead{ font-size:1rem; opacity:0.95; margin:0 0 0.5rem 0; }
+
+    /* Форма поиска (внутри hero) */
+    .search-form{ display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:center; margin-top:1rem; }
+    .search-form input[type="text"], .search-form input[type="date"], .search-form select{ padding:0.625rem 0.75rem; border-radius:0.5rem; border: none; min-width:12rem; font-size:0.95rem; }
+    .search-form .btn{ padding:0.625rem 1rem; border-radius:0.5rem; background:var(--accent); color:#fff; border:none; font-weight:600; cursor:pointer; }
+
+    /* === Features (фотокарточки) === */
+    .features{ padding:2rem 0; background:linear-gradient(180deg,#fff,#f3f8ff); }
+    .cards{ display:flex; gap:1rem; justify-content:center; align-items:stretch; flex-wrap:wrap; }
+    .card{ width:18.75rem; height:12.5rem; border-radius:var(--card-radius); overflow:hidden; position:relative; box-shadow:0 6px 18px rgba(8,30,60,0.08); background-size:cover; background-position:center; }
+    .card .overlay{ position:absolute; inset:auto 0 0 0; padding:0.75rem; background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 100%); color:#fff; font-weight:700; text-align:center; }
+
+    /* === Контакты === */
+    .contacts{ padding:2rem 0; }
+    .contacts .grid{ display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
+    .contact-card{ background:#fff; border-radius:0.75rem; padding:1rem; width:18rem; box-shadow:0 6px 18px rgba(8,30,60,0.06); display:flex; gap:0.75rem; align-items:center; }
+    .contact-card svg{ width:2rem; height:2rem; flex:0 0 2rem; }
+
+    /* === Footer (тёмный) === */
+    footer{ background:#07070a; color:#fff; padding:1.25rem 0; text-align:center; font-size:0.95rem; }
+
+    /* Простые hover эффекты */
+    .btn:hover{ opacity:0.95; transform:translateY(-1px); transition:all .18s ease; }
+    .card:hover{ transform:translateY(-6px); transition:transform .25s ease; }
+
+    /* === SVG sprite иконки в стиле (будут в HTML) === */
+
+    /* === Адаптив: планшеты 768px, смартфоны 480px, поддержка до 320px === */
+    @media (max-width:48rem){ /* 768px */
+      :root{ --container-max:70rem; }
+      .hero{ padding:2.5rem 0; }
+      .hero h1{ font-size:2rem; }
+      .card{ width:16.5rem; height:11rem; }
+      .contact-card{ width:16rem; }
+    }
+
+    @media (max-width:30rem){ /* 480px */
+      html{ font-size:15px; } /* лёгкая адаптация шрифтов */
+      .hero{ min-height:56vh; padding:2rem 0; }
+      .hero h1{ font-size:1.5rem; }
+      .search-form{ flex-direction:column; align-items:stretch; gap:0.5rem; }
+      .search-form input, .search-form .btn{ width:100%; min-width:0; }
+      .cards{ flex-direction:column; align-items:center; }
+      .card{ width:100%; max-width:22rem; height:11rem; }
+      .contacts .grid{ flex-direction:column; align-items:center; }
+      footer{ font-size:0.9rem; }
+    }
+
+    @media (max-width:20rem){ /* 320px */
+      html{ font-size:14px; }
+      .hero h1{ font-size:1.25rem; }
+      .card{ height:10rem; }
+      .contact-card{ width:100%; max-width:18rem; }
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- SVG sprite (иконки) -->
+  <svg style="display:none;" aria-hidden="true" focusable="false">
+    <symbol id="icon-phone" viewBox="0 0 24 24">
+      <path fill="#000" d="M6.6 10.8a15.1 15.1 0 006.6 6.6l1.8-1.8a1 1 0 01.9-.3 11.3 11.3 0 003.5.6 1 1 0 011 1V20a1 1 0 01-1 1A18 18 0 015 5a1 1 0 011-1h2.4a1 1 0 011 1 11.3 11.3 0 00.6 3.5 1 1 0 01-.3.9L6.6 10.8z"/>
+    </symbol>
+    <symbol id="icon-mail" viewBox="0 0 24 24">
+      <path fill="#000" d="M3 6.5A2.5 2.5 0 015.5 4h13A2.5 2.5 0 0121 6.5v11A2.5 2.5 0 0118.5 20h-13A2.5 2.5 0 013 17.5v-11zM5.5 6l6.5 4.25L18.5 6"/>
+    </symbol>
+    <symbol id="icon-plane" viewBox="0 0 24 24">
+      <path fill="#000" d="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 3v2l8-1v5l-2 1v1l4-1 4 1v-1l-2-1v-5l8 1z"/>
+    </symbol>
+  </svg>
+
+  <header>
+    <div class="container inner">
+      <div class="logo">AviaTickets</div>
+      <nav aria-label="Главная навигация">
+        <!-- простая навигация, в учебном примере она статична -->
+        <a href="#" style="color:rgba(255,255,255,0.9); text-decoration:none; margin-left:1rem;">Акции</a>
+        <a href="#contacts" style="color:rgba(255,255,255,0.9); text-decoration:none; margin-left:1rem;">Контакты</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-inner">
+        <h1>Дешевые авиабилеты по всему миру!</h1>
+        <p class="lead">Летай туда, куда мечтаешь — по лучшей цене. Поиск по сотням авиакомпаний и агрегаторов.</p>
+
+        <form id="search" class="search-form" role="search" aria-label="Поиск билетов">
+          <input type="text" aria-label="Откуда" placeholder="Откуда (город или аэропорт)">
+          <input type="text" aria-label="Куда" placeholder="Куда (город или аэропорт)">
+          <input type="date" aria-label="Дата вылета">
+          <button class="btn" type="submit">Найти</button>
+        </form>
+
+      </div>
+    </section>
+
+    <!-- Features: фотокарточки -->
+    <section class="features">
+      <div class="container">
+        <div class="cards">
+          <div class="card" style="background-image:url('https://images.unsplash.com/photo-1504196606672-aef5c9cefc92?auto=format&fit=crop&w=1200&q=60');">
+            <div class="overlay">Большие скидки</div>
+          </div>
+          <div class="card" style="background-image:url('https://images.unsplash.com/photo-1486006920555-c77dcf18193c?auto=format&fit=crop&w=1200&q=60');">
+            <div class="overlay">Популярные направления</div>
+          </div>
+          <div class="card" style="background-image:url('https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&w=1200&q=60');">
+            <div class="overlay">Удобный подбор билетов</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Контакты -->
+    <section id="contacts" class="contacts">
+      <div class="container">
+        <h2 style="text-align:center; margin-bottom:1rem;">Контакты</h2>
+        <div class="grid">
+          <div class="contact-card">
+            <svg aria-hidden="true"><use href="#icon-phone"></use></svg>
+            <div>
+              <div style="font-weight:700;">Телефон</div>
+              <div>+7 (700) 000-00-00</div>
+            </div>
+          </div>
+
+          <div class="contact-card">
+            <svg aria-hidden="true"><use href="#icon-mail"></use></svg>
+            <div>
+              <div style="font-weight:700;">Email</div>
+              <div>support@aviatickets.example</div>
+            </div>
+          </div>
+
+          <div class="contact-card">
+            <svg aria-hidden="true"><use href="#icon-plane"></use></svg>
+            <div>
+              <div style="font-weight:700;">Офис</div>
+              <div>г. Алматы, ул. Примерная, 10</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="container">© 2025 AviaTickets. Найди лучшие билеты — летай выгодно!</div>
+  </footer>
+
+</body>
+</html>
+
